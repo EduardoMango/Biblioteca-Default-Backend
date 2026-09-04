@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: Biblioteca
+  datasource:
+    url: jdbc:h2:mem:bibliotecadb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  # Clave secreta HMAC-SHA256 (mínimo 256 bits / 32 bytes)
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  # 15 minutos en milisegundos (15 * 60 * 1000)
+  expiration: 900000
+  # 7 días en milisegundos (7 * 24 * 60 * 60 * 1000)
+  refresh-expiration: 604800000
+
+server:
+  port: 8081

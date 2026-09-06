@@ -10,7 +10,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
@@ -23,7 +24,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
 
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType("application/problem+json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
         String errorMessage = switch (authException) {
@@ -44,13 +45,17 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             default -> "Error de autenticación: " + authException.getMessage();
         };
 
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("error", errorMessage);
-        responseData.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-        responseData.put("path", request.getRequestURI());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", "about:blank");
+        body.put("title", "Unauthorized");
+        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+        body.put("detail", errorMessage);
+        body.put("instance", request.getRequestURI());
+        body.put("error", errorMessage);
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("path", request.getRequestURI());
 
-        response.getWriter().write(objectMapper.writeValueAsString(responseData));
+        response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();
     }
 }
-

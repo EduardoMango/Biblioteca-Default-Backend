@@ -67,6 +67,8 @@ public class DataInitializer implements CommandLineRunner {
                     .email("bibliotecario@biblioteca.com")
                     .dni("30123456")
                     .telefono("1122334455")
+                    .rol("BIBLIOTECARIO")
+                    .activo(true)
                     .build();
 
             CredentialsEntity adminCredentials = CredentialsEntity.builder()
@@ -89,6 +91,8 @@ public class DataInitializer implements CommandLineRunner {
                     .email("juan.perez@email.com")
                     .dni("40987654")
                     .telefono("1166778899")
+                    .rol("SOCIO")
+                    .activo(true)
                     .build();
 
             CredentialsEntity socioCredentials = CredentialsEntity.builder()

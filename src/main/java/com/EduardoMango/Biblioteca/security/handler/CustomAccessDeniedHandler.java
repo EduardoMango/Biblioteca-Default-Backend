@@ -9,7 +9,8 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
@@ -22,16 +23,22 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType("application/problem+json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("error", "Acceso denegado: No posee los permisos o roles requeridos para este recurso");
-        responseData.put("status", HttpServletResponse.SC_FORBIDDEN);
-        responseData.put("path", request.getRequestURI());
+        String errorMessage = "Acceso denegado: No posee los permisos o roles requeridos para este recurso";
 
-        response.getWriter().write(objectMapper.writeValueAsString(responseData));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", "about:blank");
+        body.put("title", "Forbidden");
+        body.put("status", HttpServletResponse.SC_FORBIDDEN);
+        body.put("detail", errorMessage);
+        body.put("instance", request.getRequestURI());
+        body.put("error", errorMessage);
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("path", request.getRequestURI());
+
+        response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();
     }
 }
-

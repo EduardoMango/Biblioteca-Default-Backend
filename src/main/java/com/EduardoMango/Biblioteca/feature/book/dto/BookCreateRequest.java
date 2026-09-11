@@ -17,6 +17,9 @@ public record BookCreateRequest(
         @Size(max = 200, message = "El título no puede exceder 200 caracteres")
         String titulo,
 
+        @Size(max = 1000, message = "La URL de la portada no puede exceder 1000 caracteres")
+        String urlPortada,
+
         @NotNull(message = "El stock total es obligatorio")
         @Min(value = 0, message = "El stock total no puede ser negativo")
         Integer stockTotal,
@@ -27,5 +30,8 @@ public record BookCreateRequest(
         @NotEmpty(message = "Debe asignar al menos un autor")
         List<UUID> autoresPublicIds
 ) {
+    public BookCreateRequest(String isbn, String titulo, Integer stockTotal, UUID categoriaPublicId, List<UUID> autoresPublicIds) {
+        this(isbn, titulo, null, stockTotal, categoriaPublicId, autoresPublicIds);
+    }
 }
 

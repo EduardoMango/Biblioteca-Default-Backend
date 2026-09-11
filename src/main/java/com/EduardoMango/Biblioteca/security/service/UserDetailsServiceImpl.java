@@ -1,6 +1,6 @@
 package com.EduardoMango.Biblioteca.security.service;
 
-import com.EduardoMango.Biblioteca.repository.CredentialsRepository;
+import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;

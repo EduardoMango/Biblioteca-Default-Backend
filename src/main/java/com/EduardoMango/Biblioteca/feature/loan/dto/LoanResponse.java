@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record LoanResponse(
         UUID publicId,
-        UUID libroPublicId,
+        String libroIsbn,
         String libroTitulo,
         UUID usuarioPublicId,
         LocalDate fechaPrestamo,

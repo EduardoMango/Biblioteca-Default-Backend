@@ -2,16 +2,17 @@ package com.EduardoMango.Biblioteca.feature.book.service;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
+import com.EduardoMango.Biblioteca.feature.book.Book;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookCreateRequest;
+import com.EduardoMango.Biblioteca.feature.book.dto.BookPatchRequest;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookResponse;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookUpdateRequest;
-import com.EduardoMango.Biblioteca.feature.book.mapper.BookMapper;
+import com.EduardoMango.Biblioteca.feature.book.BookMapper;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.Category;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -54,9 +55,9 @@ public class BookService {
         }
 
         Book book = bookMapper.toEntity(request);
-        book.setPublicId(UUID.randomUUID());
         book.setIsbn(trimmedIsbn);
         book.setTitulo(request.titulo().trim());
+        book.setUrlPortada(request.urlPortada() != null ? request.urlPortada().trim() : null);
         book.setStockTotal(request.stockTotal());
         book.setStockDisponible(request.stockTotal());
         book.setCategoria(category);
@@ -66,19 +67,19 @@ public class BookService {
         return bookMapper.toResponse(saved);
     }
 
-    public BookResponse getBookByPublicId(UUID publicId) {
-        return bookRepository.findByPublicId(publicId)
+    public BookResponse getBookByIsbn(String isbn) {
+        return bookRepository.findByIsbn(isbn)
                 .map(bookMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con publicId: " + publicId));
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
     }
 
     @Transactional
-    public BookResponse updateBook(UUID publicId, BookUpdateRequest request) {
-        Book book = bookRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con publicId: " + publicId));
+    public BookResponse updateBook(String isbn, BookUpdateRequest request) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
 
         String trimmedIsbn = request.isbn().trim();
-        if (bookRepository.existsByIsbnAndPublicIdNot(trimmedIsbn, publicId)) {
+        if (bookRepository.existsByIsbnAndIdNot(trimmedIsbn, book.getId())) {
             throw new BusinessRuleException("Ya existe un libro registrado con el ISBN ingresado");
         }
 
@@ -101,6 +102,7 @@ public class BookService {
 
         book.setIsbn(trimmedIsbn);
         book.setTitulo(request.titulo().trim());
+        book.setUrlPortada(request.urlPortada() != null ? request.urlPortada().trim() : null);
         book.setStockTotal(request.stockTotal());
         book.setStockDisponible(nuevoDisponible);
         book.setCategoria(category);
@@ -112,6 +114,7 @@ public class BookService {
 
     public Page<BookResponse> searchBooks(
             String titulo,
+            String isbn,
             UUID categoriaPublicId,
             UUID autorPublicId,
             Boolean soloDisponibles,
@@ -121,14 +124,23 @@ public class BookService {
                 ? PageRequest.of(0, 10, Sort.by("titulo").ascending())
                 : pageable;
 
-        Specification<Book> spec = BookSpecification.withFilters(titulo, categoriaPublicId, autorPublicId, soloDisponibles);
+        Specification<Book> spec = BookSpecification.withFilters(titulo, isbn, categoriaPublicId, autorPublicId, soloDisponibles);
         return bookRepository.findAll(spec, effectivePageable).map(bookMapper::toResponse);
     }
 
+    public Page<BookResponse> searchBooks(
+            String titulo,
+            UUID categoriaPublicId,
+            UUID autorPublicId,
+            Boolean soloDisponibles,
+            Pageable pageable) {
+        return searchBooks(titulo, null, categoriaPublicId, autorPublicId, soloDisponibles, pageable);
+    }
+
     @Transactional
-    public BookResponse adjustStock(UUID publicId, com.EduardoMango.Biblioteca.feature.book.dto.StockAdjustmentRequest request) {
-        Book book = bookRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con publicId: " + publicId));
+    public BookResponse adjustStock(String isbn, com.EduardoMango.Biblioteca.feature.book.dto.StockAdjustmentRequest request) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
 
         int prestados = book.getStockTotal() - book.getStockDisponible();
         if (request.nuevoStockTotal() < prestados) {
@@ -139,6 +151,26 @@ public class BookService {
         book.setStockTotal(request.nuevoStockTotal());
         book.setStockDisponible(nuevoDisponible);
 
+        Book saved = bookRepository.save(book);
+        return bookMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public BookResponse updateCover(String isbn, String urlPortada) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
+        book.setUrlPortada(urlPortada != null ? urlPortada.trim() : null);
+        Book saved = bookRepository.save(book);
+        return bookMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public BookResponse patchBook(String isbn, BookPatchRequest request) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro no encontrado con ISBN: " + isbn));
+        if (request.urlPortada() != null) {
+            book.setUrlPortada(request.urlPortada().trim());
+        }
         Book saved = bookRepository.save(book);
         return bookMapper.toResponse(saved);
     }

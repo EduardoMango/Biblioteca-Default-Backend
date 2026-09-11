@@ -1,6 +1,6 @@
 package com.EduardoMango.Biblioteca;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +14,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.UUID;
+
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -63,72 +66,77 @@ class SecurityRoleAuthorizationTest {
     @Test
     @DisplayName("Endpoint público debe ser accesible sin autenticación")
     void testPublicEndpointAnonymousAccess() throws Exception {
-        mockMvc.perform(get("/api/libros/publico/catalogo"))
+        AuthRequest loginRequest = new AuthRequest("socio_juan", "socio123");
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.libros").isArray());
+                .andExpect(jsonPath("$.accessToken").isNotEmpty());
     }
 
     @Test
     @DisplayName("Endpoint protegido debe retornar 401 Unauthorized sin token")
     void testProtectedEndpointWithoutToken() throws Exception {
-        mockMvc.perform(get("/api/socio/mis-prestamos"))
+        mockMvc.perform(get("/api/usuarios/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
-    @DisplayName("Socio debe poder consultar sus préstamos con ROLE_SOCIO")
-    void testSocioCanAccessHisLoans() throws Exception {
-        mockMvc.perform(get("/api/socio/mis-prestamos")
+    @DisplayName("Socio debe poder consultar su perfil con ROLE_SOCIO")
+    void testSocioCanAccessHisProfile() throws Exception {
+        mockMvc.perform(get("/api/usuarios/me")
                         .header("Authorization", "Bearer " + socioToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.usuario").value("socio_juan"))
-                .andExpect(jsonPath("$.prestamos").isArray());
+                .andExpect(jsonPath("$.nombre").value("Juan"))
+                .andExpect(jsonPath("$.rol").value("SOCIO"));
     }
 
     @Test
-    @DisplayName("Socio debe poder solicitar un préstamo con ROLE_SOCIO")
-    void testSocioCanRequestLoan() throws Exception {
-        mockMvc.perform(post("/api/prestamos/solicitar?libroId=1")
+    @DisplayName("Socio debe poder consultar catálogo de libros con ROLE_SOCIO")
+    void testSocioCanAccessBooksCatalog() throws Exception {
+        mockMvc.perform(get("/api/libros")
                         .header("Authorization", "Bearer " + socioToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("PENDIENTE_APROBACION"));
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
-    @DisplayName("Socio debe recibir 403 Forbidden al intentar aprobar préstamos (exclusivo de Bibliotecario)")
-    void testSocioCannotApproveLoans() throws Exception {
-        mockMvc.perform(post("/api/prestamos/gestion/aprobar?prestamoId=101")
+    @DisplayName("Socio debe recibir 403 Forbidden al intentar acceder a la supervisión de préstamos (exclusivo de Bibliotecario)")
+    void testSocioCannotAccessSupervision() throws Exception {
+        mockMvc.perform(get("/api/prestamos/supervision")
                         .header("Authorization", "Bearer " + socioToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Acceso denegado: No posee los permisos o roles requeridos para este recurso"));
     }
 
     @Test
-    @DisplayName("Socio debe recibir 403 Forbidden al intentar acceder al panel de administración")
-    void testSocioCannotAccessAdminPanel() throws Exception {
-        mockMvc.perform(get("/api/biblioteca/admin/panel")
-                        .header("Authorization", "Bearer " + socioToken))
-                .andExpect(status().isForbidden());
+    @DisplayName("Socio debe recibir 403 Forbidden al intentar modificar el estado de un usuario (exclusivo de Bibliotecario)")
+    void testSocioCannotModifyUserStatus() throws Exception {
+        mockMvc.perform(patch("/api/usuarios/" + UUID.randomUUID() + "/estado")
+                        .header("Authorization", "Bearer " + socioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"activo\": false}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Acceso denegado: No posee los permisos o roles requeridos para este recurso"));
     }
 
     @Test
-    @DisplayName("Bibliotecario debe poder aprobar préstamos con ROLE_BIBLIOTECARIO")
-    void testBibliotecarioCanApproveLoans() throws Exception {
-        mockMvc.perform(post("/api/prestamos/gestion/aprobar?prestamoId=101")
+    @DisplayName("Bibliotecario debe poder acceder a la supervisión de préstamos con ROLE_BIBLIOTECARIO")
+    void testBibliotecarioCanAccessSupervision() throws Exception {
+        mockMvc.perform(get("/api/prestamos/supervision")
                         .header("Authorization", "Bearer " + bibliotecarioToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("APROBADO"))
-                .andExpect(jsonPath("$.bibliotecario").value("bibliotecario"));
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
-    @DisplayName("Bibliotecario debe poder acceder al panel de administración")
-    void testBibliotecarioCanAccessAdminPanel() throws Exception {
-        mockMvc.perform(get("/api/biblioteca/admin/panel")
+    @DisplayName("Bibliotecario debe poder consultar su perfil con ROLE_BIBLIOTECARIO")
+    void testBibliotecarioCanAccessProfile() throws Exception {
+        mockMvc.perform(get("/api/usuarios/me")
                         .header("Authorization", "Bearer " + bibliotecarioToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.administrador").value("bibliotecario"))
-                .andExpect(jsonPath("$.totalLibros").value(1540));
+                .andExpect(jsonPath("$.nombre").value("Laura"))
+                .andExpect(jsonPath("$.rol").value("BIBLIOTECARIO"));
     }
 }

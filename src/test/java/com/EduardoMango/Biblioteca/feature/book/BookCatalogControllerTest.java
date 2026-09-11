@@ -1,12 +1,11 @@
 package com.EduardoMango.Biblioteca.feature.book;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.Category;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +75,6 @@ class BookCatalogControllerTest {
 
         for (int i = 1; i <= 15; i++) {
             Book book = Book.builder()
-                    .publicId(UUID.randomUUID())
                     .isbn("ISBN-PAG-" + UUID.randomUUID())
                     .titulo("Libro Paginado " + i)
                     .stockTotal(5)
@@ -103,9 +101,9 @@ class BookCatalogControllerTest {
         Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("Stock " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
         String prefix = "STOCKTEST_" + UUID.randomUUID() + "_";
-        Book bookA = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro A").stockTotal(2).stockDisponible(2).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
-        Book bookB = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro B").stockTotal(1).stockDisponible(0).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
-        Book bookC = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro C").stockTotal(1).stockDisponible(1).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
+        Book bookA = Book.builder().isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro A").stockTotal(2).stockDisponible(2).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
+        Book bookB = Book.builder().isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro B").stockTotal(1).stockDisponible(0).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
+        Book bookC = Book.builder().isbn(UUID.randomUUID().toString()).titulo(prefix + "Libro C").stockTotal(1).stockDisponible(1).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
         bookRepository.saveAll(List.of(bookA, bookB, bookC));
 
         mockMvc.perform(get("/api/libros?titulo=" + prefix + "&soloDisponibles=true")
@@ -123,10 +121,10 @@ class BookCatalogControllerTest {
         Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("Prog " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
         String tag = "TAG_" + UUID.randomUUID();
-        Book b1 = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Code").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
-        Book b2 = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Architecture").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
-        Book b3 = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Cooking").stockTotal(3).stockDisponible(3).categoria(catOther).autores(new ArrayList<>(List.of(author))).build();
-        Book b4 = Book.builder().publicId(UUID.randomUUID()).isbn(UUID.randomUUID().toString()).titulo(tag + " Java Concurrency").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
+        Book b1 = Book.builder().isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Code").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
+        Book b2 = Book.builder().isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Architecture").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
+        Book b3 = Book.builder().isbn(UUID.randomUUID().toString()).titulo(tag + " Clean Cooking").stockTotal(3).stockDisponible(3).categoria(catOther).autores(new ArrayList<>(List.of(author))).build();
+        Book b4 = Book.builder().isbn(UUID.randomUUID().toString()).titulo(tag + " Java Concurrency").stockTotal(3).stockDisponible(3).categoria(catProg).autores(new ArrayList<>(List.of(author))).build();
         bookRepository.saveAll(List.of(b1, b2, b3, b4));
 
         mockMvc.perform(get("/api/libros?titulo=clean&categoriaPublicId=" + catProg.getPublicId())
@@ -144,5 +142,24 @@ class BookCatalogControllerTest {
                         .header("Authorization", "Bearer " + socioToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("Escenario 5: Filtrar libros por ISBN")
+    void testFiltrarLibrosPorIsbn() throws Exception {
+        Category cat = categoryRepository.save(Category.builder().nombre("Cat ISBN " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("ISBN " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+
+        String targetIsbn = "978-9876543210";
+        Book bookTarget = Book.builder().isbn(targetIsbn).titulo("Libro Buscado Por ISBN").stockTotal(2).stockDisponible(2).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
+        Book bookOther = Book.builder().isbn("978-1111111111").titulo("Otro Libro").stockTotal(2).stockDisponible(2).categoria(cat).autores(new ArrayList<>(List.of(author))).build();
+        bookRepository.saveAll(List.of(bookTarget, bookOther));
+
+        mockMvc.perform(get("/api/libros?isbn=" + targetIsbn)
+                        .header("Authorization", "Bearer " + socioToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].isbn").value(targetIsbn))
+                .andExpect(jsonPath("$.content[0].titulo").value("Libro Buscado Por ISBN"));
     }
 }

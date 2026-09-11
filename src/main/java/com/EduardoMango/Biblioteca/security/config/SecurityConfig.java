@@ -54,13 +54,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Rutas públicas de autenticación y documentación
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/libros/publico/**").permitAll()
-                        // Rutas exclusivas del Bibliotecario
-                        .requestMatchers("/api/biblioteca/admin/**", "/api/prestamos/gestion/**").hasRole("BIBLIOTECARIO")
-                        // Rutas compartidas o de socios
-                        .requestMatchers("/api/socio/**", "/api/prestamos/solicitar/**").hasAnyRole("SOCIO", "BIBLIOTECARIO")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

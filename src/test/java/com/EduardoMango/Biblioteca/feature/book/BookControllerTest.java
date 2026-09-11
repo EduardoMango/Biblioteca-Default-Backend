@@ -1,14 +1,15 @@
 package com.EduardoMango.Biblioteca.feature.book;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
+import com.EduardoMango.Biblioteca.feature.book.dto.BookCoverUpdateRequest;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookCreateRequest;
+import com.EduardoMango.Biblioteca.feature.book.dto.BookPatchRequest;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookUpdateRequest;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.Category;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,7 +84,7 @@ class BookControllerTest {
     @DisplayName("Escenario 1: Crear un libro exitosamente con rol BIBLIOTECARIO")
     void testCrearLibroExitosamente() throws Exception {
         Category cat = categoryRepository.save(Category.builder().nombre("Ingeniería de Software " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
-        Author a1 = authorRepository.save(Author.builder().nombre("Robert").apellido("Martin " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author a1 = authorRepository.save(Author.builder().nombre("Robert").apellido("Cecil " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author a2 = authorRepository.save(Author.builder().nombre("Dean").apellido("Wampler " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
         BookCreateRequest request = new BookCreateRequest(
@@ -99,7 +100,6 @@ class BookControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.publicId").isNotEmpty())
                 .andExpect(jsonPath("$.isbn").value("978-0132350884"))
                 .andExpect(jsonPath("$.titulo").value("Clean Code"))
                 .andExpect(jsonPath("$.stockTotal").value(5))
@@ -121,7 +121,6 @@ class BookControllerTest {
                 .stockDisponible(3)
                 .categoria(cat)
                 .autores(new ArrayList<>(List.of(a1)))
-                .publicId(UUID.randomUUID())
                 .build();
         bookRepository.save(existing);
 
@@ -142,16 +141,39 @@ class BookControllerTest {
     }
 
     @Test
+    @DisplayName("Consultar libro por ISBN exitosamente")
+    void testConsultarLibroPorIsbn() throws Exception {
+        Category cat = categoryRepository.save(Category.builder().nombre("Cat Get " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("Get " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+
+        String isbn = "978-1234567890";
+        Book book = Book.builder()
+                .isbn(isbn)
+                .titulo("Libro Consulta")
+                .stockTotal(3)
+                .stockDisponible(3)
+                .categoria(cat)
+                .autores(new ArrayList<>(List.of(a1)))
+                .build();
+        bookRepository.save(book);
+
+        mockMvc.perform(get("/api/libros/" + isbn)
+                        .header("Authorization", "Bearer " + socioToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isbn").value(isbn))
+                .andExpect(jsonPath("$.titulo").value("Libro Consulta"));
+    }
+
+    @Test
     @DisplayName("Escenario 3: Edición de datos del libro")
     void testEditarLibroExitosamente() throws Exception {
         Category cat = categoryRepository.save(Category.builder().nombre("Cat Edit " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("Uno " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author a2 = authorRepository.save(Author.builder().nombre("Autor").apellido("Dos " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-8888888888";
         Book book = Book.builder()
-                .publicId(bookId)
-                .isbn("978-8888888888")
+                .isbn(isbn)
                 .titulo("Título Original")
                 .stockTotal(4)
                 .stockDisponible(4)
@@ -168,12 +190,12 @@ class BookControllerTest {
                 List.of(a1.getPublicId(), a2.getPublicId())
         );
 
-        mockMvc.perform(put("/api/libros/" + bookId)
+        mockMvc.perform(put("/api/libros/" + isbn)
                         .header("Authorization", "Bearer " + bibliotecarioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.publicId").value(bookId.toString()))
+                .andExpect(jsonPath("$.isbn").value(isbn))
                 .andExpect(jsonPath("$.titulo").value("Título Editado"))
                 .andExpect(jsonPath("$.stockTotal").value(6))
                 .andExpect(jsonPath("$.stockDisponible").value(6))
@@ -186,11 +208,10 @@ class BookControllerTest {
         Category cat = categoryRepository.save(Category.builder().nombre("Cat Stock " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("Stock " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-7777777777";
         // stockTotal = 5, stockDisponible = 2 -> prestados = 3
         Book book = Book.builder()
-                .publicId(bookId)
-                .isbn("978-7777777777")
+                .isbn(isbn)
                 .titulo("Libro con Prestamos")
                 .stockTotal(5)
                 .stockDisponible(2)
@@ -208,7 +229,7 @@ class BookControllerTest {
                 List.of(a1.getPublicId())
         );
 
-        mockMvc.perform(put("/api/libros/" + bookId)
+        mockMvc.perform(put("/api/libros/" + isbn)
                         .header("Authorization", "Bearer " + bibliotecarioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -226,6 +247,122 @@ class BookControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Escenario 5: Crear libro con urlPortada y verificar que se retorne en GET")
+    void testCrearLibroConUrlPortadaYConsultar() throws Exception {
+        Category cat = categoryRepository.save(Category.builder().nombre("Cat Cover " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("Cover " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+
+        String isbn = "978-COVER-" + UUID.randomUUID().toString().substring(0, 8);
+        String urlPortada = "https://images.example.com/books/cover.jpg";
+
+        BookCreateRequest request = new BookCreateRequest(
+                isbn,
+                "Libro Con Portada",
+                urlPortada,
+                3,
+                cat.getPublicId(),
+                List.of(a1.getPublicId())
+        );
+
+        mockMvc.perform(post("/api/libros")
+                        .header("Authorization", "Bearer " + bibliotecarioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.isbn").value(isbn))
+                .andExpect(jsonPath("$.urlPortada").value(urlPortada));
+
+        mockMvc.perform(get("/api/libros/" + isbn)
+                        .header("Authorization", "Bearer " + socioToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isbn").value(isbn))
+                .andExpect(jsonPath("$.urlPortada").value(urlPortada));
+    }
+
+    @Test
+    @DisplayName("Escenario 6: Actualizar portada mediante PATCH /api/libros/{isbn}/portada")
+    void testActualizarPortadaViaPatchSubrecurso() throws Exception {
+        Category cat = categoryRepository.save(Category.builder().nombre("Cat Patch " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("Patch " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+
+        String isbn = "978-PATCH-" + UUID.randomUUID().toString().substring(0, 8);
+        Book book = Book.builder()
+                .isbn(isbn)
+                .titulo("Libro Para Patch Portada")
+                .stockTotal(4)
+                .stockDisponible(4)
+                .categoria(cat)
+                .autores(new ArrayList<>(List.of(a1)))
+                .build();
+        bookRepository.save(book);
+
+        String nuevaPortada = "https://images.example.com/books/new-cover.jpg";
+        BookCoverUpdateRequest patchRequest = new BookCoverUpdateRequest(nuevaPortada);
+
+        mockMvc.perform(patch("/api/libros/" + isbn + "/portada")
+                        .header("Authorization", "Bearer " + bibliotecarioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isbn").value(isbn))
+                .andExpect(jsonPath("$.urlPortada").value(nuevaPortada));
+    }
+
+    @Test
+    @DisplayName("Escenario 7: Actualizar portada mediante PATCH general /api/libros/{isbn}")
+    void testActualizarPortadaViaPatchGeneral() throws Exception {
+        Category cat = categoryRepository.save(Category.builder().nombre("Cat GenPatch " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+        Author a1 = authorRepository.save(Author.builder().nombre("Autor").apellido("GenPatch " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
+
+        String isbn = "978-GEN-" + UUID.randomUUID().toString().substring(0, 8);
+        Book book = Book.builder()
+                .isbn(isbn)
+                .titulo("Libro Para General Patch")
+                .stockTotal(4)
+                .stockDisponible(4)
+                .categoria(cat)
+                .autores(new ArrayList<>(List.of(a1)))
+                .build();
+        bookRepository.save(book);
+
+        String nuevaPortada = "https://images.example.com/books/gen-patch-cover.jpg";
+        BookPatchRequest patchRequest = new BookPatchRequest(nuevaPortada);
+
+        mockMvc.perform(patch("/api/libros/" + isbn)
+                        .header("Authorization", "Bearer " + bibliotecarioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isbn").value(isbn))
+                .andExpect(jsonPath("$.urlPortada").value(nuevaPortada));
+    }
+
+    @Test
+    @DisplayName("Caso adicional: Socio no tiene permisos para actualizar portada (403 Forbidden)")
+    void testSocioNoPuedeActualizarPortada() throws Exception {
+        BookCoverUpdateRequest patchRequest = new BookCoverUpdateRequest("https://images.example.com/cover.jpg");
+
+        mockMvc.perform(patch("/api/libros/978-0000000000/portada")
+                        .header("Authorization", "Bearer " + socioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Caso adicional: Validar que URL de portada mayor a 1000 caracteres retorna 400 Bad Request")
+    void testValidacionUrlPortadaExcediendoTamanio() throws Exception {
+        String longUrl = "https://images.example.com/" + "a".repeat(1000);
+        BookCoverUpdateRequest patchRequest = new BookCoverUpdateRequest(longUrl);
+
+        mockMvc.perform(patch("/api/libros/978-0000000000/portada")
+                        .header("Authorization", "Bearer " + bibliotecarioToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isBadRequest());
     }
 }
 

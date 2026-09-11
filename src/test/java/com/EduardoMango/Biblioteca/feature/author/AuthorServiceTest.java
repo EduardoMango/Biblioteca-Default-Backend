@@ -2,11 +2,8 @@ package com.EduardoMango.Biblioteca.feature.author;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorRequest;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorResponse;
-import com.EduardoMango.Biblioteca.feature.author.mapper.AuthorMapper;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
 import com.EduardoMango.Biblioteca.feature.author.service.AuthorDeletionValidator;
 import com.EduardoMango.Biblioteca.feature.author.service.AuthorService;
 import org.junit.jupiter.api.DisplayName;

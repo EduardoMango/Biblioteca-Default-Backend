@@ -2,7 +2,7 @@ package com.EduardoMango.Biblioteca.feature.loan.repository;
 
 import com.EduardoMango.Biblioteca.feature.loan.domain.Loan;
 import com.EduardoMango.Biblioteca.feature.loan.domain.LoanStatus;
-import com.EduardoMango.Biblioteca.model.entity.UserEntity;
+import com.EduardoMango.Biblioteca.feature.user.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,5 +33,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     @Query("SELECT (COUNT(l) > 0) FROM Loan l WHERE l.usuario = :usuario AND l.fechaDevolucionEfectiva IS NULL AND l.fechaDevolucionEsperada < :fecha")
     boolean hasOverdueLoans(@Param("usuario") UserEntity usuario, @Param("fecha") LocalDate fecha);
+
+    @Query("SELECT l FROM Loan l JOIN FETCH l.usuario JOIN FETCH l.libro WHERE l.estado = :estado AND l.fechaDevolucionEsperada = :fecha")
+    List<Loan> findActiveLoansDueAt(@Param("estado") LoanStatus estado, @Param("fecha") LocalDate fecha);
 }
 

@@ -1,15 +1,15 @@
 package com.EduardoMango.Biblioteca.config;
 
-import com.EduardoMango.Biblioteca.model.entity.CredentialsEntity;
-import com.EduardoMango.Biblioteca.model.entity.PermitEntity;
-import com.EduardoMango.Biblioteca.model.entity.RoleEntity;
-import com.EduardoMango.Biblioteca.model.entity.UserEntity;
-import com.EduardoMango.Biblioteca.model.enums.Permits;
-import com.EduardoMango.Biblioteca.model.enums.Roles;
-import com.EduardoMango.Biblioteca.repository.CredentialsRepository;
-import com.EduardoMango.Biblioteca.repository.PermitRepository;
-import com.EduardoMango.Biblioteca.repository.RoleRepository;
-import com.EduardoMango.Biblioteca.repository.UserRepository;
+import com.EduardoMango.Biblioteca.feature.auth.domain.CredentialsEntity;
+import com.EduardoMango.Biblioteca.feature.auth.domain.PermitEntity;
+import com.EduardoMango.Biblioteca.feature.auth.domain.RoleEntity;
+import com.EduardoMango.Biblioteca.feature.user.UserEntity;
+import com.EduardoMango.Biblioteca.feature.auth.domain.Permits;
+import com.EduardoMango.Biblioteca.feature.auth.domain.Roles;
+import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository;
+import com.EduardoMango.Biblioteca.feature.auth.repository.PermitRepository;
+import com.EduardoMango.Biblioteca.feature.auth.repository.RoleRepository;
+import com.EduardoMango.Biblioteca.feature.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

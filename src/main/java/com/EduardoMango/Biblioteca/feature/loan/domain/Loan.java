@@ -1,7 +1,7 @@
 package com.EduardoMango.Biblioteca.feature.loan.domain;
 
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
-import com.EduardoMango.Biblioteca.model.entity.UserEntity;
+import com.EduardoMango.Biblioteca.feature.book.Book;
+import com.EduardoMango.Biblioteca.feature.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

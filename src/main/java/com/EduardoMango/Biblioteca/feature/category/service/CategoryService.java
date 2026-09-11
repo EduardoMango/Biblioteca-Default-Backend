@@ -2,11 +2,11 @@ package com.EduardoMango.Biblioteca.feature.category.service;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
+import com.EduardoMango.Biblioteca.feature.category.Category;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryRequest;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryResponse;
-import com.EduardoMango.Biblioteca.feature.category.mapper.CategoryMapper;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.CategoryMapper;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

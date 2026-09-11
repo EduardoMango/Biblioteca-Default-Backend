@@ -3,7 +3,7 @@ package com.EduardoMango.Biblioteca.feature.user.mapper;
 import com.EduardoMango.Biblioteca.feature.loan.domain.Loan;
 import com.EduardoMango.Biblioteca.feature.user.dto.LoanHistoryResponse;
 import com.EduardoMango.Biblioteca.feature.user.dto.UserProfileResponse;
-import com.EduardoMango.Biblioteca.model.entity.UserEntity;
+import com.EduardoMango.Biblioteca.feature.user.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

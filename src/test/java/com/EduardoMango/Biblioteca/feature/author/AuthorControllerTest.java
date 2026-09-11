@@ -1,9 +1,7 @@
 package com.EduardoMango.Biblioteca.feature.author;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorRequest;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
 import com.EduardoMango.Biblioteca.feature.author.service.AuthorDeletionValidator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

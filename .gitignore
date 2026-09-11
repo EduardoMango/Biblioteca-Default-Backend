@@ -21,6 +21,8 @@ target/
 
 .agents
 .features
+.env
+!.env.example
 
 
 ### NetBeans ###

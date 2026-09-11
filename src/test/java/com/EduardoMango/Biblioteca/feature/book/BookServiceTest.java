@@ -2,17 +2,16 @@ package com.EduardoMango.Biblioteca.feature.book;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookCreateRequest;
+import com.EduardoMango.Biblioteca.feature.book.dto.BookPatchRequest;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookResponse;
 import com.EduardoMango.Biblioteca.feature.book.dto.BookUpdateRequest;
-import com.EduardoMango.Biblioteca.feature.book.mapper.BookMapper;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
 import com.EduardoMango.Biblioteca.feature.book.service.BookService;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.Category;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +61,6 @@ class BookServiceTest {
         Book book = Book.builder().build();
         Book savedBook = Book.builder()
                 .id(1L)
-                .publicId(UUID.randomUUID())
                 .isbn("978-0132350884")
                 .titulo("Clean Code")
                 .stockTotal(5)
@@ -70,7 +68,7 @@ class BookServiceTest {
                 .categoria(category)
                 .autores(List.of(author1, author2))
                 .build();
-        BookResponse response = new BookResponse(savedBook.getPublicId(), "978-0132350884", "Clean Code", 5, 5, null, null);
+        BookResponse response = new BookResponse("978-0132350884", "Clean Code", 5, 5, null, null);
 
         when(bookRepository.existsByIsbn("978-0132350884")).thenReturn(false);
         when(categoryRepository.findByPublicId(catId)).thenReturn(Optional.of(category));
@@ -87,6 +85,32 @@ class BookServiceTest {
         assertEquals(5, result.stockTotal());
         assertEquals(5, result.stockDisponible());
         verify(bookRepository).save(any(Book.class));
+    }
+
+    @Test
+    @DisplayName("Dado un ISBN existente, retorna el libro correspondiente")
+    void getBookByIsbn_Success() {
+        String isbn = "978-0132350884";
+        Book book = Book.builder().id(1L).isbn(isbn).titulo("Clean Code").build();
+        BookResponse response = new BookResponse(isbn, "Clean Code", 5, 5, null, null);
+
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(book));
+        when(bookMapper.toResponse(book)).thenReturn(response);
+
+        BookResponse result = bookService.getBookByIsbn(isbn);
+
+        assertNotNull(result);
+        assertEquals(isbn, result.isbn());
+        assertEquals("Clean Code", result.titulo());
+    }
+
+    @Test
+    @DisplayName("Dado un ISBN no existente, lanza ResourceNotFoundException")
+    void getBookByIsbn_NotFound_ThrowsResourceNotFoundException() {
+        String isbn = "978-0000000000";
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> bookService.getBookByIsbn(isbn));
     }
 
     @Test
@@ -118,15 +142,14 @@ class BookServiceTest {
     @Test
     @DisplayName("Dado un intento de reducción de stock por debajo de lo prestado en edición, lanza BusinessRuleException")
     void updateBook_ReduceStockBelowBorrowed_ThrowsBusinessRuleException() {
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-111";
         UUID catId = UUID.randomUUID();
         UUID autId = UUID.randomUUID();
 
         // stockTotal = 5, stockDisponible = 2 -> prestados = 3
         Book existingBook = Book.builder()
                 .id(1L)
-                .publicId(bookId)
-                .isbn("978-111")
+                .isbn(isbn)
                 .titulo("Libro Original")
                 .stockTotal(5)
                 .stockDisponible(2)
@@ -137,15 +160,66 @@ class BookServiceTest {
         Category category = Category.builder().id(1L).publicId(catId).build();
         Author author = Author.builder().id(1L).publicId(autId).build();
 
-        when(bookRepository.findByPublicId(bookId)).thenReturn(Optional.of(existingBook));
-        when(bookRepository.existsByIsbnAndPublicIdNot("978-111", bookId)).thenReturn(false);
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(existingBook));
+        when(bookRepository.existsByIsbnAndIdNot("978-111", 1L)).thenReturn(false);
         when(categoryRepository.findByPublicId(catId)).thenReturn(Optional.of(category));
         when(authorRepository.findByPublicId(autId)).thenReturn(Optional.of(author));
 
         BusinessRuleException ex = assertThrows(BusinessRuleException.class, () ->
-                bookService.updateBook(bookId, request));
+                bookService.updateBook(isbn, request));
 
         assertEquals("No se puede reducir el stock total por debajo del número de copias prestadas", ex.getMessage());
+        verify(bookRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Dado un ISBN existente y una nueva URL de portada, actualiza la portada con éxito")
+    void updateCover_Success() {
+        String isbn = "978-0132350884";
+        String nuevaPortada = "https://images.example.com/clean-code.jpg";
+        Book book = Book.builder().id(1L).isbn(isbn).titulo("Clean Code").build();
+        Book savedBook = Book.builder().id(1L).isbn(isbn).titulo("Clean Code").urlPortada(nuevaPortada).build();
+        BookResponse response = new BookResponse(isbn, "Clean Code", nuevaPortada, 5, 5, null, null);
+
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(book));
+        when(bookRepository.save(book)).thenReturn(savedBook);
+        when(bookMapper.toResponse(savedBook)).thenReturn(response);
+
+        BookResponse result = bookService.updateCover(isbn, nuevaPortada);
+
+        assertNotNull(result);
+        assertEquals(nuevaPortada, result.urlPortada());
+        verify(bookRepository).save(book);
+    }
+
+    @Test
+    @DisplayName("Dado un patch request con urlPortada, actualiza la portada con éxito")
+    void patchBook_Success() {
+        String isbn = "978-0132350884";
+        String nuevaPortada = "https://images.example.com/clean-code-patch.jpg";
+        BookPatchRequest request = new BookPatchRequest(nuevaPortada);
+        Book book = Book.builder().id(1L).isbn(isbn).titulo("Clean Code").build();
+        Book savedBook = Book.builder().id(1L).isbn(isbn).titulo("Clean Code").urlPortada(nuevaPortada).build();
+        BookResponse response = new BookResponse(isbn, "Clean Code", nuevaPortada, 5, 5, null, null);
+
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(book));
+        when(bookRepository.save(book)).thenReturn(savedBook);
+        when(bookMapper.toResponse(savedBook)).thenReturn(response);
+
+        BookResponse result = bookService.patchBook(isbn, request);
+
+        assertNotNull(result);
+        assertEquals(nuevaPortada, result.urlPortada());
+        verify(bookRepository).save(book);
+    }
+
+    @Test
+    @DisplayName("Dado un ISBN no existente para actualizar portada, lanza ResourceNotFoundException")
+    void updateCover_NotFound_ThrowsResourceNotFoundException() {
+        String isbn = "978-0000000000";
+        when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> bookService.updateCover(isbn, "https://example.com/cover.jpg"));
         verify(bookRepository, never()).save(any());
     }
 }

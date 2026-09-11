@@ -1,17 +1,17 @@
 package com.EduardoMango.Biblioteca.feature.user.service;
 
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.auth.domain.CredentialsEntity;
+import com.EduardoMango.Biblioteca.feature.auth.repository.CredentialsRepository;
+import com.EduardoMango.Biblioteca.feature.book.Book;
 import com.EduardoMango.Biblioteca.feature.loan.domain.Loan;
 import com.EduardoMango.Biblioteca.feature.loan.domain.LoanStatus;
 import com.EduardoMango.Biblioteca.feature.loan.repository.LoanRepository;
+import com.EduardoMango.Biblioteca.feature.user.UserEntity;
+import com.EduardoMango.Biblioteca.feature.user.UserRepository;
 import com.EduardoMango.Biblioteca.feature.user.dto.LoanHistoryResponse;
 import com.EduardoMango.Biblioteca.feature.user.dto.UserProfileResponse;
 import com.EduardoMango.Biblioteca.feature.user.mapper.UserProfileMapper;
-import com.EduardoMango.Biblioteca.model.entity.CredentialsEntity;
-import com.EduardoMango.Biblioteca.model.entity.UserEntity;
-import com.EduardoMango.Biblioteca.repository.CredentialsRepository;
-import com.EduardoMango.Biblioteca.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -4,16 +4,18 @@ import com.EduardoMango.Biblioteca.feature.author.dto.AuthorResponse;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryResponse;
 
 import java.util.List;
-import java.util.UUID;
 
 public record BookResponse(
-        UUID publicId,
         String isbn,
         String titulo,
+        String urlPortada,
         Integer stockTotal,
         Integer stockDisponible,
         CategoryResponse categoria,
         List<AuthorResponse> autores
 ) {
+    public BookResponse(String isbn, String titulo, Integer stockTotal, Integer stockDisponible, CategoryResponse categoria, List<AuthorResponse> autores) {
+        this(isbn, titulo, null, stockTotal, stockDisponible, categoria, autores);
+    }
 }
 

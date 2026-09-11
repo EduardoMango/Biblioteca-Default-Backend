@@ -2,11 +2,8 @@ package com.EduardoMango.Biblioteca.feature.category;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryRequest;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryResponse;
-import com.EduardoMango.Biblioteca.feature.category.mapper.CategoryMapper;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
 import com.EduardoMango.Biblioteca.feature.category.service.CategoryDeletionValidator;
 import com.EduardoMango.Biblioteca.feature.category.service.CategoryService;
 import org.junit.jupiter.api.DisplayName;

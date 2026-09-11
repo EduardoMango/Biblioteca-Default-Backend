@@ -1,8 +1,8 @@
 package com.EduardoMango.Biblioteca.feature.book.repository;
 
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.book.Book;
+import com.EduardoMango.Biblioteca.feature.category.Category;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +18,15 @@ public class BookSpecification {
             UUID categoriaPublicId,
             UUID autorPublicId,
             Boolean soloDisponibles) {
+        return withFilters(titulo, null, categoriaPublicId, autorPublicId, soloDisponibles);
+    }
+
+    public static Specification<Book> withFilters(
+            String titulo,
+            String isbn,
+            UUID categoriaPublicId,
+            UUID autorPublicId,
+            Boolean soloDisponibles) {
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -26,6 +35,13 @@ public class BookSpecification {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("titulo")),
                         "%" + titulo.trim().toLowerCase() + "%"
+                ));
+            }
+
+            if (isbn != null && !isbn.isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("isbn")),
+                        "%" + isbn.trim().toLowerCase() + "%"
                 ));
             }
 

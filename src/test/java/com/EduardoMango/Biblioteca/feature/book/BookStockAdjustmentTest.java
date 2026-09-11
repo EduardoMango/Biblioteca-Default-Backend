@@ -1,13 +1,12 @@
 package com.EduardoMango.Biblioteca.feature.book;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
-import com.EduardoMango.Biblioteca.feature.book.domain.Book;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
+import com.EduardoMango.Biblioteca.feature.author.Author;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
 import com.EduardoMango.Biblioteca.feature.book.dto.StockAdjustmentRequest;
 import com.EduardoMango.Biblioteca.feature.book.repository.BookRepository;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
+import com.EduardoMango.Biblioteca.feature.category.Category;
+import com.EduardoMango.Biblioteca.feature.category.CategoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,11 +85,10 @@ class BookStockAdjustmentTest {
         Category cat = categoryRepository.save(Category.builder().nombre("Cat StockInc " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("StockInc " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-INC-" + UUID.randomUUID().toString().substring(0, 8);
         // stockTotal = 10, stockDisponible = 4 (en préstamo = 6)
         Book book = Book.builder()
-                .publicId(bookId)
-                .isbn(UUID.randomUUID().toString())
+                .isbn(isbn)
                 .titulo("Libro Para Incrementar")
                 .stockTotal(10)
                 .stockDisponible(4)
@@ -101,7 +99,7 @@ class BookStockAdjustmentTest {
 
         StockAdjustmentRequest request = new StockAdjustmentRequest(15);
 
-        mockMvc.perform(patch("/api/libros/" + bookId + "/stock")
+        mockMvc.perform(patch("/api/libros/" + isbn + "/stock")
                         .header("Authorization", "Bearer " + bibliotecarioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -109,7 +107,7 @@ class BookStockAdjustmentTest {
                 .andExpect(jsonPath("$.stockTotal").value(15))
                 .andExpect(jsonPath("$.stockDisponible").value(9));
 
-        Book updated = bookRepository.findByPublicId(bookId).orElseThrow();
+        Book updated = bookRepository.findByIsbn(isbn).orElseThrow();
         assertEquals(15, updated.getStockTotal());
         assertEquals(9, updated.getStockDisponible());
     }
@@ -120,11 +118,10 @@ class BookStockAdjustmentTest {
         Category cat = categoryRepository.save(Category.builder().nombre("Cat StockDec " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("StockDec " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-DEC-" + UUID.randomUUID().toString().substring(0, 8);
         // stockTotal = 5, stockDisponible = 3 (en préstamo = 2)
         Book book = Book.builder()
-                .publicId(bookId)
-                .isbn(UUID.randomUUID().toString())
+                .isbn(isbn)
                 .titulo("Libro Para Reducir")
                 .stockTotal(5)
                 .stockDisponible(3)
@@ -135,7 +132,7 @@ class BookStockAdjustmentTest {
 
         StockAdjustmentRequest request = new StockAdjustmentRequest(3);
 
-        mockMvc.perform(patch("/api/libros/" + bookId + "/stock")
+        mockMvc.perform(patch("/api/libros/" + isbn + "/stock")
                         .header("Authorization", "Bearer " + bibliotecarioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -143,7 +140,7 @@ class BookStockAdjustmentTest {
                 .andExpect(jsonPath("$.stockTotal").value(3))
                 .andExpect(jsonPath("$.stockDisponible").value(1));
 
-        Book updated = bookRepository.findByPublicId(bookId).orElseThrow();
+        Book updated = bookRepository.findByIsbn(isbn).orElseThrow();
         assertEquals(3, updated.getStockTotal());
         assertEquals(1, updated.getStockDisponible());
     }
@@ -154,11 +151,10 @@ class BookStockAdjustmentTest {
         Category cat = categoryRepository.save(Category.builder().nombre("Cat StockErr " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
         Author author = authorRepository.save(Author.builder().nombre("Autor").apellido("StockErr " + UUID.randomUUID()).publicId(UUID.randomUUID()).build());
 
-        UUID bookId = UUID.randomUUID();
+        String isbn = "978-ERR-" + UUID.randomUUID().toString().substring(0, 8);
         // stockTotal = 10, stockDisponible = 2 (en préstamo = 8)
         Book book = Book.builder()
-                .publicId(bookId)
-                .isbn(UUID.randomUUID().toString())
+                .isbn(isbn)
                 .titulo("Libro Mucho Prestamo")
                 .stockTotal(10)
                 .stockDisponible(2)
@@ -169,14 +165,14 @@ class BookStockAdjustmentTest {
 
         StockAdjustmentRequest request = new StockAdjustmentRequest(5);
 
-        mockMvc.perform(patch("/api/libros/" + bookId + "/stock")
+        mockMvc.perform(patch("/api/libros/" + isbn + "/stock")
                         .header("Authorization", "Bearer " + bibliotecarioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("El nuevo stock total no puede ser inferior a las 8 copias actualmente prestadas"));
 
-        Book unchanged = bookRepository.findByPublicId(bookId).orElseThrow();
+        Book unchanged = bookRepository.findByIsbn(isbn).orElseThrow();
         assertEquals(10, unchanged.getStockTotal());
         assertEquals(2, unchanged.getStockDisponible());
     }
@@ -186,7 +182,7 @@ class BookStockAdjustmentTest {
     void testSocioNoPuedeAjustarStock() throws Exception {
         StockAdjustmentRequest request = new StockAdjustmentRequest(10);
 
-        mockMvc.perform(patch("/api/libros/" + UUID.randomUUID() + "/stock")
+        mockMvc.perform(patch("/api/libros/978-0000000000/stock")
                         .header("Authorization", "Bearer " + socioToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

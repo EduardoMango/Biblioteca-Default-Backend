@@ -19,8 +19,8 @@ public record LoanSupervisionResponse(
         return usuario != null ? usuario.publicId() : null;
     }
 
-    public UUID getLibroPublicId() {
-        return libro != null ? libro.publicId() : null;
+    public String getLibroIsbn() {
+        return libro != null ? libro.isbn() : null;
     }
 }
 

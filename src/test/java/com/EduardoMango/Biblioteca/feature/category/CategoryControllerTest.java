@@ -1,9 +1,7 @@
 package com.EduardoMango.Biblioteca.feature.category;
 
-import com.EduardoMango.Biblioteca.dto.AuthRequest;
-import com.EduardoMango.Biblioteca.feature.category.domain.Category;
+import com.EduardoMango.Biblioteca.feature.auth.dto.AuthRequest;
 import com.EduardoMango.Biblioteca.feature.category.dto.CategoryRequest;
-import com.EduardoMango.Biblioteca.feature.category.repository.CategoryRepository;
 import com.EduardoMango.Biblioteca.feature.category.service.CategoryDeletionValidator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

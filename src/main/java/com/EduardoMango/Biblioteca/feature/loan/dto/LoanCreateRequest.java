@@ -1,12 +1,12 @@
 package com.EduardoMango.Biblioteca.feature.loan.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;
 
 public record LoanCreateRequest(
-        @NotNull(message = "El publicId del libro es obligatorio")
-        UUID libroPublicId,
+        @NotBlank(message = "El ISBN del libro es obligatorio")
+        String libroIsbn,
         UUID usuarioPublicId
 ) {
 }

@@ -2,11 +2,11 @@ package com.EduardoMango.Biblioteca.feature.author.service;
 
 import com.EduardoMango.Biblioteca.exception.BusinessRuleException;
 import com.EduardoMango.Biblioteca.exception.ResourceNotFoundException;
-import com.EduardoMango.Biblioteca.feature.author.domain.Author;
+import com.EduardoMango.Biblioteca.feature.author.Author;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorRequest;
 import com.EduardoMango.Biblioteca.feature.author.dto.AuthorResponse;
-import com.EduardoMango.Biblioteca.feature.author.mapper.AuthorMapper;
-import com.EduardoMango.Biblioteca.feature.author.repository.AuthorRepository;
+import com.EduardoMango.Biblioteca.feature.author.AuthorMapper;
+import com.EduardoMango.Biblioteca.feature.author.AuthorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

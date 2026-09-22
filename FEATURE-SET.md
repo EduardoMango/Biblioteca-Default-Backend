@@ -362,8 +362,8 @@ Sistema de Gestión de Biblioteca
   2. El sistema verifica que el préstamo esté pendiente de devolución.
   3. Registra la fecha efectiva de devolución como el día actual.
   4. Compara la fecha efectiva con la fecha esperada de devolución:
-     - Si $\text{fechaDevolucionEfectiva} \le \text{fechaDevolucionEsperada} \implies \text{Estado} = \text{DEVUELTO}$.
-     - Si $\text{fechaDevolucionEfectiva} > \text{fechaDevolucionEsperada} \implies \text{Estado} = \text{CON\_RETRASO}$.
+- Si `fechaDevolucionEfectiva` $\le$ `fechaDevolucionEsperada` $\implies$ `Estado` = `DEVUELTO`.
+ - Si `fechaDevolucionEfectiva` $>$ `fechaDevolucionEsperada` $\implies$ `Estado` = `CON_RETRASO`.
   5. Incrementa atómicamente en 1 el `stockDisponible` del libro correspondiente.
 * **Resultado esperado:** Préstamo cerrado con su estado final asentado y stock disponible incrementado en 1.
 * **Reglas de negocio relevantes:** `BR-030`, `BR-031`, `BR-032`, `BR-033`.

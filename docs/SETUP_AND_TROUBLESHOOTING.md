@@ -1,4 +1,4 @@
-# 🛠️ Guía de Instalación, Configuración y Solución de Problemas (Setup & Troubleshooting)
+# Guía de Instalación, Configuración y Solución de Problemas (Setup & Troubleshooting)
 
 Esta guía proporciona instrucciones paso a paso para configurar el entorno de desarrollo local, inicializar la aplicación **Biblioteca API** y resolver de forma autónoma los problemas e incidencias más comunes.
 
@@ -26,7 +26,7 @@ El proyecto utiliza **Lombok** para reducir código repetitivo y **MapStruct** p
 1. Abre el proyecto en IntelliJ (`File -> Open -> Selecciona la carpeta Biblioteca`).
 2. Ve a **Settings / Preferences** (`Ctrl + Alt + S` en Linux/Windows, `Cmd + ,` en macOS):
    - Navega a: **Build, Execution, Deployment** $\rightarrow$ **Compiler** $\rightarrow$ **Annotation Processors**.
-   - Marca la casilla: **✅ Enable annotation processing**.
+   - Marca la casilla: **Enable annotation processing**.
    - Haz clic en **Apply** y **OK**.
 3. Verifica que el plugin de **Lombok** esté habilitado (viene integrado de forma nativa en versiones recientes de IntelliJ).
 4. Opcional: Instala el plugin **MapStruct Support** desde el Marketplace de IntelliJ para autocompletado en mappers.

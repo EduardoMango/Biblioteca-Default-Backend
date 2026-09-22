@@ -11,6 +11,9 @@ import org.mapstruct.Mapping;
 public interface BookMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "descripcion", ignore = true)
+    @Mapping(target = "editorial", ignore = true)
     @Mapping(target = "stockDisponible", ignore = true)
     @Mapping(target = "categoria", ignore = true)
     @Mapping(target = "autores", ignore = true)

@@ -58,6 +58,12 @@ public class BookService {
         book.setIsbn(trimmedIsbn);
         book.setTitulo(request.titulo().trim());
         book.setUrlPortada(request.urlPortada() != null ? request.urlPortada().trim() : null);
+        if (request.editorial() != null && !request.editorial().isBlank()) {
+            book.setEditorial(request.editorial().trim());
+        }
+        if (request.descripcion() != null && !request.descripcion().isBlank()) {
+            book.setDescripcion(request.descripcion().trim());
+        }
         book.setStockTotal(request.stockTotal());
         book.setStockDisponible(request.stockTotal());
         book.setCategoria(category);

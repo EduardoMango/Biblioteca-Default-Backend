@@ -19,5 +19,15 @@ public class AppConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
+
+    @Bean
+    public org.springframework.web.reactive.function.client.WebClient.Builder webClientBuilder() {
+        return org.springframework.web.reactive.function.client.WebClient.builder();
+    }
+
+    @Bean
+    public org.springframework.transaction.support.TransactionTemplate transactionTemplate(org.springframework.transaction.PlatformTransactionManager transactionManager) {
+        return new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+    }
 }
 

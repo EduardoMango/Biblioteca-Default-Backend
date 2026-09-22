@@ -13,6 +13,8 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
 
     Optional<Author> findByPublicId(UUID publicId);
 
+    Optional<Author> findByNombreIgnoreCaseAndApellidoIgnoreCase(String nombre, String apellido);
+
     @Query("SELECT a FROM Author a WHERE " +
             "(:q IS NULL OR :q = '' OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(a.apellido) LIKE LOWER(CONCAT('%', :q, '%'))) AND " +
             "(:nacionalidad IS NULL OR :nacionalidad = '' OR LOWER(a.nacionalidad) LIKE LOWER(CONCAT('%', :nacionalidad, '%')))")

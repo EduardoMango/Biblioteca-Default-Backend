@@ -45,18 +45,37 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas de autenticación y documentación
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .dispatcherTypeMatchers(
+                                jakarta.servlet.DispatcherType.FORWARD,
+                                jakarta.servlet.DispatcherType.ASYNC,
+                                jakarta.servlet.DispatcherType.ERROR
+                        ).permitAll()
+                        // Rutas públicas de autenticación y cuentas
                         .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Consola H2 de base de datos
+                        .requestMatchers("/h2-console", "/h2-console/**").permitAll()
+                        // Endpoints públicos de OpenAPI 3 y Swagger UI
+                        .requestMatchers(
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-ui",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/webjars/**",
+                                "/favicon.ico"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -64,4 +83,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

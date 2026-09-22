@@ -22,11 +22,21 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, updatable = false)
+    @Builder.Default
+    private java.util.UUID publicId = java.util.UUID.randomUUID();
+
+    @Column(unique = true)
     private String isbn;
 
     @Column(nullable = false)
     private String titulo;
+
+    @Column(length = 4000)
+    private String descripcion;
+
+    @Column
+    private String editorial;
 
     @Column(name = "url_portada", length = 1000)
     private String urlPortada;
@@ -52,6 +62,9 @@ public class Book {
 
     @PrePersist
     public void prePersist() {
+        if (this.publicId == null) {
+            this.publicId = java.util.UUID.randomUUID();
+        }
         if (this.stockDisponible == null && this.stockTotal != null) {
             this.stockDisponible = this.stockTotal;
         }
